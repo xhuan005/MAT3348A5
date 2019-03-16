@@ -23,10 +23,19 @@ class Vertex:
         self.group = group
         self.neighbors = []
         self.edges = []
+        self.saturated = False
+        self.matchingVertex = None #not null only when saturated is true
     def __str__(self):
         return self.key
     def __repr__(self):
         return self.key
+    """
+    insertNeighbor
+    @param neighbor: Vertex
+    @return: void
+    @ insert a vertex as neighbor and create an edge. Edge is also put into 
+    list of edges
+    """
     def insertNeighbor(self,neighbor):
         if neighbor in self.neighbors:
             print("FAIL! this neighbor is already added")
@@ -36,5 +45,26 @@ class Vertex:
             self.neighbors.append(neighbor)
             edge = Edge(self,neighbor)
             self.edges.append(edge)
-            
+    """
+    getEdge
+    @param v:vertex - has to element of neiboughs
+    @return edge - has to be element in edges
+    """
+    def getEdge(self, v):
+        for edge in self.edges:
+            if v == edge.p1 or v == edge.p2:
+                return edge
+    def getSaturated(self):
+        return self.saturated
+    def setSaturated(self,boolean):
+        self.saturated = boolean
+        if boolean == False:
+            self.matchingVertex = None
+    def makeMatch(self,v):
+        self.matchingVertex = v
+        v.matchingVertex = self
+        self.saturated = True
+        v.saturated = True
+
+    
         
