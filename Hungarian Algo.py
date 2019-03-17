@@ -26,9 +26,9 @@ class Vertex:
         self.saturated = False
         self.matchingVertex = None #not null only when saturated is true
     def __str__(self):
-        return self.key
+        return str(self.key)
     def __repr__(self):
-        return self.key
+        return str(self.key)
     """
     insertNeighbor
     @param neighbor: Vertex
@@ -45,6 +45,9 @@ class Vertex:
             self.neighbors.append(neighbor)
             edge = Edge(self,neighbor)
             self.edges.append(edge)
+            #add self to neighbor's neighbor list
+            neighbor.neighbors.append(self)
+            neighbor.edges.append(edge)
     """
     getEdge
     @param v:vertex - has to element of neiboughs
@@ -52,19 +55,101 @@ class Vertex:
     """
     def getEdge(self, v):
         for edge in self.edges:
-            if v == edge.p1 or v == edge.p2:
+            if v == edge.v1 or v == edge.v2:
                 return edge
     def getSaturated(self):
         return self.saturated
     def setSaturated(self,boolean):
         self.saturated = boolean
         if boolean == False:
-            self.matchingVertex = None
+            self.matchingVertex = None #if we set saturted to false we have to null out the matching Vertex
+            
+    #Match 2 vertex
     def makeMatch(self,v):
+        if v not in self.neighbors:
+            print("v is not in neighbors" )
         self.matchingVertex = v
         v.matchingVertex = self
         self.saturated = True
         v.saturated = True
 
     
+class Edge:
+    """
+    @params
+        v1:Vertex
+        v2:Vertex
+        isMatch:boolean
+    """     
+    def __init__(self,v1,v2):
+        self.v1 = v1
+        self.v2 = v2
+        self.isMatch = False
+    def __str__(self):
+        return "(" + str(self.v1) +","+str(self.v2)+")"
+    def __repr__(self):
+        return "(" + str(self.v1) +","+self(self.v2)+")"
+    
+class BipartiteGraph:
+    """
+    @param adjList:List List
+            index of out list is key for vertex group is S
+            value in inniner list is key for vertex Group T
+            
+            Example[["a","b","c"],["a","d","e"]] 
+            v0 is connect with va,vb,vc
+            v1 is connected with vd,ve
+            
+            
+    """
+    def __init__(self,adjList):
+        self.S = [] #set S
+        self.T = [] #set T
+        self.edges =[] #set of Edges consider removing
+        self.initSets(adjList)
+    def initSets(self,adjList):
+        for i in range(len(adjList)):
+            vertex = Vertex(i,"S")
+            self.S.append(vertex)
+            print("evaluating S " + str(vertex))
+            
+
+            
+            for neighborStr in adjList[i]:
+                vertNei = None
+                #check if neighbor already in list T
+                for t in self.T:
+                    if neighborStr == t.key:
+                        print(neighborStr + " vertex already in T ")
+                        vertNei = t
+                        break
+                if vertNei == None:
+                    print(neighborStr + " is not in T adding vertex")
+                    vertNei = Vertex(neighborStr,"T")
+                    self.T.append(vertNei)
+                vertex.insertNeighbor(vertNei)
+                edge = vertex.getEdge(vertNei)
+                self.edges.append(edge)
+    def __repr__(self):
+        s = "S:["
+        for v in self.S:
+            s = s+str(v)+","
+        s = s+"]"
+        t = "T:["
+        for v in self.T:
+            t = t+str(v)+","
+        t = t+"]"
+        e = "E:["
+        for edge in self.edges:
+            e = e + str(edge)
+        e = e+"]"
+        return s +"\n" + t +"\n" + e +"\n"
+def runHungarianAlgo(g):
+    if len(g.S)!=len(g.T):
+        print("Since the |S| = " + str(len(g.S)) + " and the |T| = " + str(len(g.T)) + ". There is not perfect matching)")
+graph = BipartiteGraph([["a","b","c"],["a","d","e"]])
+
+runHungarianAlgo(graph)
+                
+            
         
