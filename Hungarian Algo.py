@@ -147,7 +147,23 @@ class BipartiteGraph:
 def runHungarianAlgo(g):
     if len(g.S)!=len(g.T):
         print("Since the |S| = " + str(len(g.S)) + " and the |T| = " + str(len(g.T)) + ". There is not perfect matching)")
+    initialMatching(g)
+    printMatching(g)
+def initialMatching(g):
+    for s in g.S:
+        for t in s.neighbors:
+            if t.saturated == False:
+                s.makeMatch(t)
+                break
+def printMatching(g):
+    m = ""
+    for s in g.S:
+        if s.saturated == True:
+            matchingEdge = s.getEdge(s.matchingVertex)
+            m = m + str(matchingEdge)
+    print(m)
 graph = BipartiteGraph([["a","b","c"],["a","d","e"]])
+print(str(graph))
 
 runHungarianAlgo(graph)
                 
