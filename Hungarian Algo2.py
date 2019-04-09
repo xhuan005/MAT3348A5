@@ -5,6 +5,8 @@ Created on Wed Mar 27 19:29:27 2019
 @author: Xiaopei
 """
 import networkx as nx
+import matplotlib.pyplot as plt
+from matplotlib.widgets import Button
 
 """
 let g be graph
@@ -61,6 +63,7 @@ class HungarianAlgorithm:
         self.Y = g.graph['Y']
         self.visited = dict.fromkeys(self.V, False)  # record visited status in constructing M-alternating tree
         self.mAlternatingTree = nx.Graph()
+        self.next = 1
 
     def doesMSaturateX(self):
         '''
@@ -79,10 +82,11 @@ class HungarianAlgorithm:
                     self.V[y]['saturated'] = True
                     self.V[y]['matchingVertex'] = x
                     self.V[x]['matchingVertex'] = y
+                    self.g[x][y]['match'] = True
                     self.g[x][y]['color'] = setEdgeColor(self.g[x][y]['match'],
                                                          self.g[x][y]['path'])  # set color for visual
+                    self.drawGraph()
                     break
-
     def getFirstUnsaturatedX(self):
         '''
         Get the first M-unsaturated vertex in X. Return None if there is no such vertex.
@@ -122,6 +126,8 @@ class HungarianAlgorithm:
                         prevEdge = self.g[uyPath[i]][uyPath[i + 1]]
                         prevEdge['match'] = False
                         prevEdge['color'] = setEdgeColor(False, False)
+                        print(uyPath[i],uyPath[i + 1],prevEdge['color'])
+                        self.drawGraph()
 
                     vProps = self.V[uyPath[i]]
                     vProps['saturated'] = True
@@ -135,6 +141,8 @@ class HungarianAlgorithm:
                     edge['match'] = True
                     edge['path'] = True
                     edge['color'] = setEdgeColor(True, True)
+                    print(uyPath[i],uyPath[i + 1],edge['color'])
+                    self.drawGraph()
 
                     print('{{{}, {}}} is marked M-saturated'.format(uyPath[i], uyPath[i + 1]))
 
@@ -144,6 +152,8 @@ class HungarianAlgorithm:
                     edge = self.g[uyPath[i]][uyPath[i + 1]]
                     edge['path'] = False
                     edge['color'] = setEdgeColor(edge['match'], False)
+                    print(uyPath[i],uyPath[i + 1],edge['color'])
+                    self.drawGraph()
 
     def getMatching(self):
         '''
@@ -155,7 +165,10 @@ class HungarianAlgorithm:
     def start(self):
         if len(self.X) != len(self.Y):
             print("|X| != |Y| => impossible to have a perfect matching")
-        self.initialMatching()  # initial matching
+        self.drawGraph()
+        self.initialMatching()  # initial matching.
+        print('The initial matching is')
+        print(self.getMatching())
 
         while not self.doesMSaturateX():
             # Choose the first M-unsaturated vertex u in X and start searching for M-augmenting paths from u
@@ -172,7 +185,24 @@ class HungarianAlgorithm:
 
         print('The final matching is')
         print(self.getMatching())
-
+    def drawGraph(self):
+        self.next = 1
+        fig, ax=plt.subplots()
+        colors = [self.g[u][v]['color'] for u, v in self.g.edges()]
+        nx.draw(self.g, nx.bipartite_layout(self.g, self.g.graph['X']), with_labels=True, edge_color=colors, width=5)
+        
+        axnext = plt.axes([0.81, 0.05, 0.1, 0.075])
+        bnext = Button(axnext, 'Next')
+        bnext.on_clicked(self.nextButton)
+        plt.show()
+        while(self.next==1):
+            continue
+        
+    def nextButton(self,event):
+        self.next = 0
+        plt.close()
+        
+    
     # perfectMatchBool, unSaturatedX, unSaturatedY = isPerfectMatch(g)
     # stopCondition = False  # N(S) = T
     # while perfectMatchBool == False and stopCondition == False:  # while not perfect match and did not reach stop condition
