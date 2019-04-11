@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Mar 27 19:29:27 2019
-
-@author: Xiaopei
+@author: Xiaopei Huang, Xuankai Chen
 """
-import networkx as nx
 import matplotlib.pyplot as plt
+import networkx as nx
 from matplotlib.widgets import Button
 
 """
-let g be graph
+Let g be a graph
 node:
     g.nodes[key] return params of node key
     ex:
@@ -87,6 +85,7 @@ class HungarianAlgorithm:
                                                          self.g[x][y]['path'])  # set color for visual
                     self.drawGraph()
                     break
+
     def getFirstUnsaturatedX(self):
         '''
         Get the first M-unsaturated vertex in X. Return None if there is no such vertex.
@@ -122,12 +121,15 @@ class HungarianAlgorithm:
                 # For every two vertices, update the matching properties (saturated, matchingVertex)
                 # of it and the next vertex in the (u, y)-path.
                 for i in range(0, len(uyPath), 2):
+                    # Clear current matching
                     if i != 0:
-                        prevEdge = self.g[uyPath[i]][uyPath[i + 1]]
+                        prevEdge = self.g[uyPath[i]][self.V[uyPath[i]]['matchingVertex']]
                         prevEdge['match'] = False
-                        prevEdge['color'] = setEdgeColor(False, False)
-                        print(uyPath[i],uyPath[i + 1],prevEdge['color'])
+                        prevEdge['path'] = True
+                        prevEdge['color'] = setEdgeColor(False, True)
+                        print(uyPath[i], uyPath[i + 1], prevEdge['color'])
                         self.drawGraph()
+
 
                     vProps = self.V[uyPath[i]]
                     vProps['saturated'] = True
@@ -141,18 +143,17 @@ class HungarianAlgorithm:
                     edge['match'] = True
                     edge['path'] = True
                     edge['color'] = setEdgeColor(True, True)
-                    print(uyPath[i],uyPath[i + 1],edge['color'])
+                    print(uyPath[i], uyPath[i + 1], edge['color'])
                     self.drawGraph()
 
                     print('{{{}, {}}} is marked M-saturated'.format(uyPath[i], uyPath[i + 1]))
 
                 # Cleanup the path
-                # TODO: Only cleanup upon user's request
                 for i in range(0, len(uyPath), 2):
                     edge = self.g[uyPath[i]][uyPath[i + 1]]
                     edge['path'] = False
                     edge['color'] = setEdgeColor(edge['match'], False)
-                    print(uyPath[i],uyPath[i + 1],edge['color'])
+                    print(uyPath[i], uyPath[i + 1], edge['color'])
                     self.drawGraph()
 
     def getMatching(self):
@@ -185,66 +186,23 @@ class HungarianAlgorithm:
 
         print('The final matching is')
         print(self.getMatching())
+
     def drawGraph(self):
         self.next = 1
-        fig, ax=plt.subplots()
+        fig, ax = plt.subplots()
         colors = [self.g[u][v]['color'] for u, v in self.g.edges()]
         nx.draw(self.g, nx.bipartite_layout(self.g, self.g.graph['X']), with_labels=True, edge_color=colors, width=5)
-        
+
         axnext = plt.axes([0.81, 0.05, 0.1, 0.075])
         bnext = Button(axnext, 'Next')
         bnext.on_clicked(self.nextButton)
         plt.show()
-        while(self.next==1):
+        while (self.next == 1):
             continue
-        
-    def nextButton(self,event):
+
+    def nextButton(self, event):
         self.next = 0
         plt.close()
-        
-    
-    # perfectMatchBool, unSaturatedX, unSaturatedY = isPerfectMatch(g)
-    # stopCondition = False  # N(S) = T
-    # while perfectMatchBool == False and stopCondition == False:  # while not perfect match and did not reach stop condition
-    #     SReachedT = False  # find an vertex for augmenting path
-    #     s = set()  # init S
-    #     t = set()  # init Y
-    #     """
-    #     我在这停了
-    #     logic有点问题
-    #     """
-    #     while (SReachedT == False):
-    #         for x in unSaturatedX:  # take a x in unSaturatedX
-    #             s.add(x)  # put x in s
-    #             stopCondition, sNeighborNotInT = nsEqualT(g, s, t)  # test for stop condition
-    #             if stopCondition:  # stop the inner for loop
-    #                 break
-    #             print(s)
-    #             print(t)
-    #             unSaturatedNeighbor = findUnSaturatedNeighbor(g, x)  # find possible solution
-    #             print(unSaturatedNeighbor)
-    #             if unSaturatedNeighbor == None:  # if every neighbor of x saturated
-    #                 y = sNeighborNotInT.pop()
-    #                 t.add(y)
-    #                 s.add(g.nodes[y]['matchingVertex'])
-    #                 print(s)
-    #                 print(t)
-    #         if stopCondition:  # stop inner while
-    #             break
-    #         break
-    #     if stopCondition:  # stop outter while loop
-    #         break
-    #     break
-
-    # colors = [g[u][v]['color'] for u, v in g.edges()]
-    # nx.draw(g, nx.bipartite_layout(g, g.graph['X']), with_labels=True, edge_color=colors, width=5)
-
-
-def findUnSaturatedNeighbor(g, x):
-    for y in g[x]:
-        if g.nodes[y]['saturated'] == False:
-            return y
-    return None
 
 
 def nsEqualT(g, s, t):
