@@ -34,25 +34,6 @@ edges:
 """
 
 
-def createBipartiteGraph(adjacencyList):
-    """
-    @purpose:  created a bipartite graph using adjacencyList
-               index number is set X and element in each array is set Y
-    @param: adjacencyList
-    """
-    g = nx.Graph()  # create nx graph
-    for i in range(len(adjacencyList)):
-        g.add_node(i, bipartite=0, saturated=False, matchingVertex=None)
-        # i is the key for node with param(bipartite:integer, saturated:bool, matchingVertex:node)
-        for e in adjacencyList[i]:
-            g.add_node(e, bipartite=1, saturated=False, matchingVertex=None)
-            g.add_edge(i, e, match=False, path=False, color='black')  # path may or may not need
-            # (i,e) are endpoints of edge with param (match:bool, path:bool, color:string)
-    g.graph.update(X=nx.bipartite.sets(g)[0], Y=nx.bipartite.sets(g)[1])
-    # set param(x: all node with bipartite = 0, y:all nodes with bipartite = 1)
-    return g
-
-
 class HungarianAlgorithm:
     def __init__(self, g):
         self.g = g
@@ -130,7 +111,6 @@ class HungarianAlgorithm:
                         print(uyPath[i], uyPath[i + 1], prevEdge['color'])
                         self.drawGraph()
 
-
                     vProps = self.V[uyPath[i]]
                     vProps['saturated'] = True
                     vProps['matchingVertex'] = uyPath[i + 1]
@@ -165,7 +145,8 @@ class HungarianAlgorithm:
 
     def start(self):
         if len(self.X) != len(self.Y):
-            print("|X| != |Y| => impossible to have a perfect matching")
+            print("|X| != |Y| ==> impossible to have a perfect matching")
+
         self.drawGraph()
         self.initialMatching()  # initial matching.
         print('The initial matching is')
@@ -189,13 +170,16 @@ class HungarianAlgorithm:
 
     def drawGraph(self):
         self.next = 1
-        fig, ax = plt.subplots()
         colors = [self.g[u][v]['color'] for u, v in self.g.edges()]
-        nx.draw(self.g, nx.bipartite_layout(self.g, self.g.graph['X']), with_labels=True, edge_color=colors, width=5)
+        pos = dict(list({v: (1, i) for i, v in enumerate(sorted(self.X, reverse=True))}.items()) +
+                   list({v: (2, i) for i, v in enumerate(sorted(self.Y, reverse=True))}.items()))
+
+        nx.draw(self.g, pos=pos, with_labels=True, edge_color=colors, width=5)
 
         axnext = plt.axes([0.81, 0.05, 0.1, 0.075])
         bnext = Button(axnext, 'Next')
         bnext.on_clicked(self.nextButton)
+
         plt.show()
         while (self.next == 1):
             continue
@@ -203,6 +187,25 @@ class HungarianAlgorithm:
     def nextButton(self, event):
         self.next = 0
         plt.close()
+
+
+def createBipartiteGraph(adjacencyList):
+    """
+    @purpose:  created a bipartite graph using adjacencyList
+               index number is set X and element in each array is set Y
+    @param: adjacencyList
+    """
+    g = nx.Graph()  # create nx graph
+    for i in range(len(adjacencyList)):
+        g.add_node(i, bipartite=0, saturated=False, matchingVertex=None)
+        # i is the key for node with param(bipartite:integer, saturated:bool, matchingVertex:node)
+        for e in adjacencyList[i]:
+            g.add_node(e, bipartite=1, saturated=False, matchingVertex=None)
+            g.add_edge(i, e, match=False, path=False, color='black')  # path may or may not need
+            # (i,e) are endpoints of edge with param (match:bool, path:bool, color:string)
+    g.graph.update(X=nx.bipartite.sets(g)[0], Y=nx.bipartite.sets(g)[1])
+    # set param(x: all node with bipartite = 0, y:all nodes with bipartite = 1)
+    return g
 
 
 def nsEqualT(g, s, t):
