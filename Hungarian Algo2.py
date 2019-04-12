@@ -54,9 +54,9 @@ class HungarianAlgorithm:
         return all(self.V[x]['saturated'] for x in self.X)
 
     def initialMatching(self):
-        for x in self.X:  # loop through all element of x. x is only the key
+        for x in sorted(self.X):  # loop through all element of x. x is only the key
             # g.graph['X'] = {0, 1, 2, 3, 4}
-            for y in self.g[x]:  # loop through all neighbor of x. y is a key
+            for y in sorted(self.g[x]):  # loop through all neighbor of x. y is a key
                 if self.V[y]['saturated'] == False:  # find a neighbor that is not saturated
                     # match x and y
                     self.V[x]['saturated'] = True
@@ -180,8 +180,8 @@ class HungarianAlgorithm:
         colors = [self.g[u][v]['color'] for u, v in self.g.edges()]
 
         # Specify positions of vertices in bipartitions X and Y in the drawing
-        pos = dict(list({v: (i, 1) for i, v in enumerate(sorted(self.X))}.items()) +
-                   list({v: (i, 2) for i, v in enumerate(sorted(self.Y))}.items()))
+        pos = dict(list({v: (i, 2) for i, v in enumerate(sorted(self.X))}.items()) +
+                   list({v: (i, 1) for i, v in enumerate(sorted(self.Y))}.items()))
         nodeColor = []
         for v in self.g.nodes:
             if v == x or v == y:
@@ -202,19 +202,21 @@ class HungarianAlgorithm:
         plt.close()
 
 
-def createBipartiteGraph(adjacencyList):
+def createBipartiteGraph(edgesOfVerticesInX):
     """
-    @purpose:  created a bipartite graph using adjacencyList
+    @purpose:  created a bipartite graph using edgesOfVerticesInX
                index number is set X and element in each array is set Y
-    @param: adjacencyList
+    @param: edgesOfVerticesInX
     """
     g = nx.Graph()  # create nx graph
-    for i in range(len(adjacencyList)):
-        g.add_node(i, bipartite=0, saturated=False, matchingVertex=None)
+    for xi, verticesInY in enumerate(edgesOfVerticesInX):
+        xName = 'x{}'.format(xi)
+        g.add_node(xName, bipartite=0, saturated=False, matchingVertex=None)
         # i is the key for node with param(bipartite:integer, saturated:bool, matchingVertex:node)
-        for e in adjacencyList[i]:
-            g.add_node(e, bipartite=1, saturated=False, matchingVertex=None)
-            g.add_edge(i, e, match=False, path=False, color='black')  # path may or may not need
+        for yi in verticesInY:
+            yName = 'y{}'.format(yi)
+            g.add_node(yName, bipartite=1, saturated=False, matchingVertex=None)
+            g.add_edge(xName, yName, match=False, path=False, color='black')  # path may or may not need
             # (i,e) are endpoints of edge with param (match:bool, path:bool, color:string)
     g.graph.update(X=nx.bipartite.sets(g)[0], Y=nx.bipartite.sets(g)[1])
     # set param(x: all node with bipartite = 0, y:all nodes with bipartite = 1)
@@ -267,20 +269,72 @@ def isPerfectMatch(g):
     return (perfect, unSaturatedX, unSaturatedY)
 
 
-if __name__ == '__main__':
-    # input List - needs to find way to input.
-    inputAdjacencyList = [["a", "b", "c"], ["a", "b"], ["a", "d", "e"], ["d"], ["a", "d"]]
-    g = createBipartiteGraph(inputAdjacencyList)
-    for item in g.adj.items():
-        print(item)
-    # print(g.graph['y'])
-    # top = nx.bipartite.sets(g)[0]
-    # pos = nx.bipartite_layout(g,top)
-    # colors = [g[u][v]['color'] for u,v in g.edges()]
-    # print(colors)
-    # nx.draw(g,pos,with_labels = True,edge_color = colors )
-    # nx.draw_networkx_edges(g,pos)
+def read_presets(filename='presets.txt'):
+    '''
+    Read presets from a given file.
 
-    # print(g.edges())
-    # print(list(g.nodes(data=True)))
-    HungarianAlgorithm(g).start()  # start algorithm
+    File format:
+    1 2 3
+    1 2
+    1 4 5
+    4
+    1 4
+
+    2 3
+    1 4
+    1 3
+    3
+    2 4
+    1 5 7 8
+    4 6 7 8
+    4 7 9
+
+    Meaning:
+    Presets are separated with an empty line.
+    For every preset, numbers in each line represents
+    which vertices in Y that x_i in X connects to.
+    For example, the first block means:
+    x1 connects to y1, y2, y3
+    x2 connects to y1, y2
+    x3 connects to y1, y4, y5
+    x4 connects to y4
+    x5 connects to y1, y4
+
+    The second block is from Figure 31 in the Winter 2019 notes
+
+    :param filename: Name of the preset file (default: presets.txt)
+    :return: A list of presets
+    '''
+    with open(filename, 'r') as f:
+        res = [[]]
+        for line in f:
+            if not line.strip(): # Empty line
+                res.append([])
+            else:
+                res[-1].append(line.split())
+        return res
+
+if __name__ == '__main__':
+    if os.path.isfile('presets.txt'):
+        presets = read_presets()
+        for i, preset in enumerate(presets):
+            print(i, ':', preset)
+        edgesOfVerticesInX = presets[int(input('Please select a preset: '))]
+
+        # inputAdjacencyList = [["a", "b", "c"], ["a", "b"], ["a", "d", "e"], ["d"], ["a", "d"]]
+        g = createBipartiteGraph(edgesOfVerticesInX)
+        for item in g.adj.items():
+            print(item)
+        # print(g.graph['y'])
+        # top = nx.bipartite.sets(g)[0]
+        # pos = nx.bipartite_layout(g,top)
+        # colors = [g[u][v]['color'] for u,v in g.edges()]
+        # print(colors)
+        # nx.draw(g,pos,with_labels = True,edge_color = colors )
+        # nx.draw_networkx_edges(g,pos)
+
+        # print(g.edges())
+        # print(list(g.nodes(data=True)))
+        HungarianAlgorithm(g).start()  # start algorithm
+    else:
+        print('presets.txt does not exist. Please create one with the format documented in read_presets')
