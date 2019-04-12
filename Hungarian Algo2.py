@@ -2,6 +2,8 @@
 """
 @author: Xiaopei Huang, Xuankai Chen
 """
+import os
+
 import matplotlib.pyplot as plt
 import networkx as nx
 from matplotlib.widgets import Button
@@ -129,7 +131,7 @@ class HungarianAlgorithm:
                     print('{{{}, {}}} is marked M-saturated'.format(uyPath[i], uyPath[i + 1]))
 
                 # Cleanup the path
-                for i in range(len(uyPath)):
+                for i in range(len(uyPath) - 1):
                     edge = self.g[uyPath[i]][uyPath[i + 1]]
                     edge['path'] = False
                     edge['color'] = setEdgeColor(edge['match'], False)
