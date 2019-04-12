@@ -59,7 +59,6 @@ class HungarianAlgorithm:
         The "default" matching as we did in class.
         '''
         for x in sorted(self.X):  # loop through all element of x. x is only the key
-            # g.graph['X'] = {0, 1, 2, 3, 4}
             for y in sorted(self.g[x]):  # loop through all neighbor of x. y is a key
                 if self.V[y]['saturated'] == False:  # find a neighbor that is not saturated
                     # match x and y
@@ -259,6 +258,7 @@ class HungarianAlgorithm:
 
         print('The final matching is:', self.getMatching())
 
+
 def createBipartiteGraph(edgesOfVerticesInX):
     """
     @purpose:  created a bipartite graph using edgesOfVerticesInX
@@ -313,7 +313,7 @@ def read_presets(filename='presets.txt'):
 
     Meaning:
     Presets are separated with an empty line.
-    For every preset, numbers in each line represents
+    For every preset, numbers in each line represent
     which vertices in Y that x_i in X connects to.
     For example, the first block means:
     x1 connects to y1, y2, y3
@@ -322,7 +322,7 @@ def read_presets(filename='presets.txt'):
     x4 connects to y4
     x5 connects to y1, y4
 
-    The second block is from Figure 31 in the Winter 2019 notes
+    The second block is from Figure 31 in Winter 2019 notes
 
     :param filename: Name of the preset file (default: presets.txt)
     :return: A list of presets
