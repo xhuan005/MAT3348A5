@@ -109,10 +109,9 @@ class HungarianAlgorithm:
                     if i != 0:
                         self.drawGraph(uyPath[i-1],uyPath[i])
                         prevEdge = self.g[uyPath[i]][self.V[uyPath[i]]['matchingVertex']]
-                        prevEdge['match'] = False
                         prevEdge['path'] = True
-                        prevEdge['color'] = setEdgeColor(False, True)
-                        print(uyPath[i], uyPath[i + 1], prevEdge['color'])
+                        prevEdge['color'] = setEdgeColor(prevEdge['match'], prevEdge['path'])
+                        print("i!=0",uyPath[i], uyPath[i + 1], prevEdge['color'])
                         self.drawGraph(None,None)
 
                     vProps = self.V[uyPath[i]]
@@ -125,10 +124,9 @@ class HungarianAlgorithm:
 
                     edge = self.g[uyPath[i]][uyPath[i + 1]]
                     self.drawGraph(uyPath[i],uyPath[i + 1])
-                    edge['match'] = True
                     edge['path'] = True
-                    edge['color'] = setEdgeColor(True, True)
-                    print(uyPath[i], uyPath[i + 1], edge['color'])
+                    edge['color'] = setEdgeColor(edge['match'], edge['path'])
+                    print("not cleaning",uyPath[i], uyPath[i + 1], edge['color'])
                     self.drawGraph(None,None)
 
                     print('{{{}, {}}} is marked M-saturated'.format(uyPath[i], uyPath[i + 1]))
@@ -138,8 +136,12 @@ class HungarianAlgorithm:
                     edge = self.g[uyPath[i]][uyPath[i + 1]]
                     self.drawGraph(uyPath[i], uyPath[i + 1])
                     edge['path'] = False
-                    edge['color'] = setEdgeColor(edge['match'], False)
-                    print(uyPath[i], uyPath[i + 1], edge['color'])
+                    if edge['match'] == False:
+                        edge['match'] = True
+                    else:
+                        edge['match'] = False
+                    edge['color'] = setEdgeColor(edge['match'], edge['path'])
+                    print("cleaning",uyPath[i], uyPath[i + 1], edge['color'])
                     self.drawGraph(None,None)
 
     def getMatching(self):
