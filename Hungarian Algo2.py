@@ -45,10 +45,7 @@ class HungarianAlgorithm:
         self.T = set()
         self.X = g.graph['X']
         self.Y = g.graph['Y']
-        self.visited = dict.fromkeys(self.V, False)  # record visited status in constructing M-alternating tree
-        self.mAlternatingTree = nx.Graph()
         self.mAugmentingPath = []
-        self.next = 1
 
     def doesMSaturateX(self):
         '''
@@ -58,6 +55,9 @@ class HungarianAlgorithm:
         return all(self.V[x]['saturated'] for x in self.X)
 
     def initialMatching(self):
+        '''
+        The "default" matching as we did in class.
+        '''
         for x in sorted(self.X):  # loop through all element of x. x is only the key
             # g.graph['X'] = {0, 1, 2, 3, 4}
             for y in sorted(self.g[x]):  # loop through all neighbor of x. y is a key
@@ -93,26 +93,22 @@ class HungarianAlgorithm:
                 sNeighbor.add(y)
         return (sNeighbor == self.T, set(sNeighbor) - self.T)
 
-    def getMAlternatingTree(self, u):
+    def buildMAlternatingTree(self, u):
         '''
         Use DFS to construct an M-alternating tree.
         :param u: The current vertex
-        :param needEdgeInM: True if the child vertex needs to be M-saturated and False otherwise
+        :return: The target y if exists, and None otherwise
         '''
-        self.visited[u] = True
         doesNSEqualT, verticesInNSNotInT = self.nsEqualT()
         if doesNSEqualT:
             return None
         y = min(verticesInNSNotInT)
 
         self.mAugmentingPath += [u, y]
-        print(self.mAugmentingPath)
         edge = self.g[u][y]
         edge['path'] = True
         edge['color'] = setEdgeColor(edge['match'], True)
-        self.drawGraph(None, None)
-
-        self.mAlternatingTree.add_edge(u, y)
+        self.drawGraph(u, y)
 
         while self.V[y]['saturated'] and not doesNSEqualT:
             x = self.V[y]['matchingVertex']
@@ -121,10 +117,8 @@ class HungarianAlgorithm:
             edge = self.g[x][y]
             edge['path'] = True
             edge['color'] = setEdgeColor(edge['match'], True)
-            self.drawGraph(None, None)
+            self.drawGraph(x, y)
 
-            self.mAlternatingTree.add_edge(x, y)
-            # if not self.visited[y] and self.V[u]['matchingVertex'] == y:
             self.T.add(y)
             self.S.add(x)
             doesNSEqualT, verticesInNSNotInT = self.nsEqualT()
@@ -134,103 +128,75 @@ class HungarianAlgorithm:
                 # Backtrack to try other feasible vertices
                 while True:
                     x = self.mAugmentingPath[-1]
-                    if y not in self.g[x]:
-                        x = self.mAugmentingPath.pop(-1)
-                    else:
+                    if y in self.g[x]:
                         break
-                    print(x, self.g[x], y)
+                    self.mAugmentingPath.pop(-1)
                 self.mAugmentingPath += [y]
-                print(self.mAugmentingPath)
 
                 edge = self.g[x][y]
                 edge['path'] = True
                 edge['color'] = setEdgeColor(edge['match'], True)
-                self.drawGraph(None, None)
+                self.drawGraph(x, y)
 
-                self.mAlternatingTree.add_edge(x, y)
         if self.nsEqualT()[0]:
-            # else:
-            # self.mAugmentingPath.append(y)
-            # edge = self.g[u][y]
-            # edge['path'] = True
-            # edge['color'] = setEdgeColor(edge['match'], True)
-            # self.drawGraph(None, None)
             return None
-        else:
-            x = self.V[u]['matchingVertex']
 
-            if x:
-                self.mAugmentingPath.append(x)
-                edge = self.g[u][x]
-                edge['path'] = True
-                edge['color'] = setEdgeColor(edge['match'], True)
-                self.drawGraph(None, None)
+        x = self.V[u]['matchingVertex']
+        if x:
+            self.mAugmentingPath.append(x)
+            edge = self.g[u][x]
+            edge['path'] = True
+            edge['color'] = setEdgeColor(edge['match'], True)
+            self.drawGraph(u, x)
 
-                self.mAlternatingTree.add_edge(u, x)
+        return y
 
-            return y
-
-        # nsEqualT = True
-        # for v in sorted(self.g[u]):
-        # if not self.visited[v] and (needEdgeInM == (self.V[u]['matchingVertex'] == v)):
-        # if not self.visited[v]:
-        #     self.mAlternatingTree.add_edge(u, v)
-        #     self.getMAlternatingTree(v, not needEdgeInM)
-
-    def enlargeM(self, u, y):
+    def enlargeM(self, u):
         '''
-        Enlarge M with a (u, y)-path if there is one.
+        Enlarge M with a (u, y)-path (read from self.mAugmentingPath) if there is one.
         :param u: The root of the M-alternating tree
         '''
-        # T = intersection of V(mAlternatingTree) and Y
-        # T contains an M-unsaturated vertex y different from u.
-        # T = sorted(set(self.mAlternatingTree.nodes.keys()) & self.Y)
-        # mUnsaturatedY = next((y for y in T if not self.V[y]['saturated']), None)
-        # if mUnsaturatedY:  # An M-unsaturated y exists. Enlarge M.
-        #     uyPath = next(nx.all_simple_paths(self.mAlternatingTree, u, mUnsaturatedY), None)
-        if True:
-            # uyPath = next(nx.all_simple_paths(self.mAlternatingTree, u, y), None)
-            uyPath = self.mAugmentingPath
-            if uyPath:
-                print('The ({}, {}) path is {}'.format(u, uyPath[-1], uyPath))
-                # For every two vertices, update the matching properties (saturated, matchingVertex)
-                # of it and the next vertex in the (u, y)-path.
-                for i in range(0, len(uyPath), 2):
-                    # Clear current matching
-                    if i != 0:
-                        self.drawGraph(uyPath[i - 1], uyPath[i])
-                        prevEdge = self.g[uyPath[i]][self.V[uyPath[i]]['matchingVertex']]
-                        prevEdge['path'] = True
-                        prevEdge['color'] = setEdgeColor(prevEdge['match'], True)
-                        print("i != 0", uyPath[i], uyPath[i + 1], prevEdge['color'])
-                        self.drawGraph(None, None)
-
-                    vProps = self.V[uyPath[i]]
-                    vProps['saturated'] = True
-                    vProps['matchingVertex'] = uyPath[i + 1]
-
-                    nextVProps = self.V[uyPath[i + 1]]
-                    nextVProps['saturated'] = True
-                    nextVProps['matchingVertex'] = uyPath[i]
-
-                    edge = self.g[uyPath[i]][uyPath[i + 1]]
-                    self.drawGraph(uyPath[i], uyPath[i + 1])
-                    edge['path'] = True
-                    edge['color'] = setEdgeColor(edge['match'], edge['path'])
-                    print("not cleaning", uyPath[i], uyPath[i + 1], edge['color'])
+        uyPath = self.mAugmentingPath
+        if uyPath:
+            print('The ({}, {}) path is {}'.format(u, uyPath[-1], uyPath))
+            # For every two vertices, update the matching properties (saturated, matchingVertex)
+            # of it and the next vertex in the (u, y)-path.
+            for i in range(0, len(uyPath), 2):
+                # Clear current matching
+                if i != 0:
+                    # self.drawGraph(uyPath[i - 1], uyPath[i])
+                    prevEdge = self.g[uyPath[i]][self.V[uyPath[i]]['matchingVertex']]
+                    prevEdge['path'] = True
+                    prevEdge['color'] = setEdgeColor(prevEdge['match'], True)
+                    print("i != 0", uyPath[i], uyPath[i + 1], prevEdge['color'])
                     self.drawGraph(None, None)
 
-                    print('{{{}, {}}} is marked M-saturated'.format(uyPath[i], uyPath[i + 1]))
+                vProps = self.V[uyPath[i]]
+                vProps['saturated'] = True
+                vProps['matchingVertex'] = uyPath[i + 1]
 
-                # Cleanup the path
-                for i in range(len(uyPath) - 1):
-                    edge = self.g[uyPath[i]][uyPath[i + 1]]
-                    self.drawGraph(uyPath[i], uyPath[i + 1])
-                    edge['path'] = False
-                    edge['match'] = not edge['match']
-                    edge['color'] = setEdgeColor(edge['match'], edge['path'])
-                    print("cleaning", uyPath[i], uyPath[i + 1], edge['color'])
-                    self.drawGraph(None, None)
+                nextVProps = self.V[uyPath[i + 1]]
+                nextVProps['saturated'] = True
+                nextVProps['matchingVertex'] = uyPath[i]
+
+                edge = self.g[uyPath[i]][uyPath[i + 1]]
+                self.drawGraph(uyPath[i], uyPath[i + 1])
+                edge['path'] = True
+                edge['color'] = setEdgeColor(edge['match'], True)
+                print("not cleaning", uyPath[i], uyPath[i + 1], edge['color'])
+                self.drawGraph(None, None)
+
+                print('{{{}, {}}} is marked M-saturated'.format(uyPath[i], uyPath[i + 1]))
+
+            # Cleanup the path
+            for i in range(len(uyPath) - 1):
+                edge = self.g[uyPath[i]][uyPath[i + 1]]
+                self.drawGraph(uyPath[i], uyPath[i + 1])
+                edge['path'] = False
+                edge['match'] = not edge['match']
+                edge['color'] = setEdgeColor(edge['match'], False)
+                print("cleaning", uyPath[i], uyPath[i + 1], edge['color'])
+                self.drawGraph(None, None)
 
     def getMatching(self):
         '''
@@ -239,39 +205,7 @@ class HungarianAlgorithm:
         '''
         return [{x, self.V[x]['matchingVertex']} for x in sorted(self.X)]
 
-    def start(self):
-        if len(self.X) != len(self.Y):
-            print("|X| != |Y| ==> impossible to have a perfect matching")
-
-        self.drawGraph(None, None)
-        self.initialMatching()  # initial matching.
-        print('The initial matching is:', self.getMatching())
-
-        while not self.doesMSaturateX():
-            # Choose the first M-unsaturated vertex u in X and start searching for M-augmenting paths from u
-            u = self.getFirstUnsaturatedX()
-            self.S.clear()
-            self.T.clear()
-            self.S.add(u)
-            self.visited = dict.fromkeys(self.V, False)
-            self.mAugmentingPath = []
-            y = self.getMAlternatingTree(u)
-            if not y:  # N(S) = T
-                print('The final matching is:', self.getMatching())
-                sys.exit()
-            print(self.mAlternatingTree.edges)
-
-            if len(self.mAlternatingTree):
-                self.enlargeM(u, y)
-                self.mAlternatingTree.clear()
-            else:
-                print('Impossible to have a perfect matching')
-                break
-
-        print('The final matching is:', self.getMatching())
-
     def drawGraph(self, x, y):
-        self.next = 1
         colors = [self.g[u][v]['color'] for u, v in self.g.edges()]
 
         # Specify positions of vertices in bipartitions X and Y in the drawing
@@ -293,9 +227,37 @@ class HungarianAlgorithm:
         plt.show()
 
     def nextButton(self, event):
-        self.next = 0
         plt.close()
 
+    def start(self):
+        if len(self.X) != len(self.Y):
+            print("|X| != |Y| ==> impossible to have a perfect matching")
+
+        self.drawGraph(None, None)
+        self.initialMatching()  # initial matching.
+        print('The initial matching is:', self.getMatching())
+
+        while not self.doesMSaturateX():
+            # Choose the first M-unsaturated vertex u in X and start searching for M-augmenting paths from u
+            u = self.getFirstUnsaturatedX()
+            self.S.clear()
+            self.T.clear()
+            self.S.add(u)
+            self.mAugmentingPath = []
+            y = self.buildMAlternatingTree(u)
+            if not y:  # N(S) = T
+                print('The final matching is:', self.getMatching())
+                sys.exit()
+            print(self.mAugmentingPath)
+
+            if self.mAugmentingPath:
+                self.enlargeM(u)
+                self.mAugmentingPath.clear()
+            else:
+                print('Impossible to have a perfect matching')
+                break
+
+        print('The final matching is:', self.getMatching())
 
 def createBipartiteGraph(edgesOfVerticesInX):
     """
@@ -327,28 +289,6 @@ def setEdgeColor(match, path):
         return 'yellow'
     elif (match == False and path == False):
         return 'black'
-
-
-def isPerfectMatch(g):
-    """
-    @purpose test if graph g is perfect Match
-    @return perfect:bool
-            unSaturatedX: node list all vertex in x that is not saturated
-            unSaturatedY: node list all vertex in y that is not saturated
-            
-    """
-    unSaturatedX = []
-    unSaturatedY = []
-    perfect = False
-    for x in g.graph['X']:  # find all unSaturatedX
-        if g.nodes[x]['saturated'] == False:
-            unSaturatedX.append(x)
-    for y in g.graph['Y']:  # find all unSaturatedY
-        if g.nodes[y]['saturated'] == False:
-            unSaturatedY.append(y)
-    if (len(unSaturatedX) == len(unSaturatedY) == 0):  # if both list is empty return true
-        perfect = True
-    return (perfect, unSaturatedX, unSaturatedY)
 
 
 def read_presets(filename='presets.txt'):
@@ -402,23 +342,9 @@ if __name__ == '__main__':
         presets = read_presets()
         for i, preset in enumerate(presets):
             print(i, ':', preset)
-        # edgesOfVerticesInX = presets[int(input('Please select a preset: '))]
-        edgesOfVerticesInX = presets[0]
+        edgesOfVerticesInX = presets[int(input('Please select a preset: '))]
 
-        # inputAdjacencyList = [["a", "b", "c"], ["a", "b"], ["a", "d", "e"], ["d"], ["a", "d"]]
         g = createBipartiteGraph(edgesOfVerticesInX)
-        for item in g.adj.items():
-            print(item)
-        # print(g.graph['y'])
-        # top = nx.bipartite.sets(g)[0]
-        # pos = nx.bipartite_layout(g,top)
-        # colors = [g[u][v]['color'] for u,v in g.edges()]
-        # print(colors)
-        # nx.draw(g,pos,with_labels = True,edge_color = colors )
-        # nx.draw_networkx_edges(g,pos)
-
-        # print(g.edges())
-        # print(list(g.nodes(data=True)))
         HungarianAlgorithm(g).start()  # start algorithm
     else:
-        print('presets.txt does not exist. Please create one with the format documented in read_presets')
+        print('presets.txt does not exist. Please create one with the format documented in read_presets.')
