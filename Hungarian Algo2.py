@@ -129,7 +129,7 @@ class HungarianAlgorithm:
                     print('{{{}, {}}} is marked M-saturated'.format(uyPath[i], uyPath[i + 1]))
 
                 # Cleanup the path
-                for i in range(0, len(uyPath), 2):
+                for i in range(len(uyPath)):
                     edge = self.g[uyPath[i]][uyPath[i + 1]]
                     edge['path'] = False
                     edge['color'] = setEdgeColor(edge['match'], False)
@@ -149,14 +149,14 @@ class HungarianAlgorithm:
 
         self.drawGraph()
         self.initialMatching()  # initial matching.
-        print('The initial matching is')
-        print(self.getMatching())
+        print('The initial matching is:', self.getMatching())
 
         while not self.doesMSaturateX():
             # Choose the first M-unsaturated vertex u in X and start searching for M-augmenting paths from u
             u = self.getFirstUnsaturatedX()
             self.visited = dict.fromkeys(self.V, False)
             self.getMAlternatingTree(u, False)
+            print(self.mAlternatingTree.edges)
 
             if len(self.mAlternatingTree):
                 self.enlargeM(u)
@@ -165,14 +165,15 @@ class HungarianAlgorithm:
                 print('Impossible to have a perfect matching')
                 break
 
-        print('The final matching is')
-        print(self.getMatching())
+        print('The final matching is:', self.getMatching())
 
     def drawGraph(self):
         self.next = 1
         colors = [self.g[u][v]['color'] for u, v in self.g.edges()]
-        pos = dict(list({v: (1, i) for i, v in enumerate(sorted(self.X, reverse=True))}.items()) +
-                   list({v: (2, i) for i, v in enumerate(sorted(self.Y, reverse=True))}.items()))
+
+        # Specify positions of vertices in bipartitions X and Y in the drawing
+        pos = dict(list({v: (i, 1) for i, v in enumerate(sorted(self.X))}.items()) +
+                   list({v: (i, 2) for i, v in enumerate(sorted(self.Y))}.items()))
 
         nx.draw(self.g, pos=pos, with_labels=True, edge_color=colors, width=5)
 
@@ -181,8 +182,6 @@ class HungarianAlgorithm:
         bnext.on_clicked(self.nextButton)
 
         plt.show()
-        while (self.next == 1):
-            continue
 
     def nextButton(self, event):
         self.next = 0
