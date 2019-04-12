@@ -63,11 +63,11 @@ class HungarianAlgorithm:
                     self.V[y]['saturated'] = True
                     self.V[y]['matchingVertex'] = x
                     self.V[x]['matchingVertex'] = y
-                    self.drawGraph(x,y)
+                    self.drawGraph(x, y)
                     self.g[x][y]['match'] = True
                     self.g[x][y]['color'] = setEdgeColor(self.g[x][y]['match'],
                                                          self.g[x][y]['path'])  # set color for visual
-                    self.drawGraph(None,None)
+                    self.drawGraph(None, None)
                     break
 
     def getFirstUnsaturatedX(self):
@@ -107,12 +107,12 @@ class HungarianAlgorithm:
                 for i in range(0, len(uyPath), 2):
                     # Clear current matching
                     if i != 0:
-                        self.drawGraph(uyPath[i-1],uyPath[i])
+                        self.drawGraph(uyPath[i - 1], uyPath[i])
                         prevEdge = self.g[uyPath[i]][self.V[uyPath[i]]['matchingVertex']]
                         prevEdge['path'] = True
                         prevEdge['color'] = setEdgeColor(prevEdge['match'], prevEdge['path'])
-                        print("i!=0",uyPath[i], uyPath[i + 1], prevEdge['color'])
-                        self.drawGraph(None,None)
+                        print("i!=0", uyPath[i], uyPath[i + 1], prevEdge['color'])
+                        self.drawGraph(None, None)
 
                     vProps = self.V[uyPath[i]]
                     vProps['saturated'] = True
@@ -123,11 +123,11 @@ class HungarianAlgorithm:
                     nextVProps['matchingVertex'] = uyPath[i]
 
                     edge = self.g[uyPath[i]][uyPath[i + 1]]
-                    self.drawGraph(uyPath[i],uyPath[i + 1])
+                    self.drawGraph(uyPath[i], uyPath[i + 1])
                     edge['path'] = True
                     edge['color'] = setEdgeColor(edge['match'], edge['path'])
-                    print("not cleaning",uyPath[i], uyPath[i + 1], edge['color'])
-                    self.drawGraph(None,None)
+                    print("not cleaning", uyPath[i], uyPath[i + 1], edge['color'])
+                    self.drawGraph(None, None)
 
                     print('{{{}, {}}} is marked M-saturated'.format(uyPath[i], uyPath[i + 1]))
 
@@ -141,8 +141,8 @@ class HungarianAlgorithm:
                     else:
                         edge['match'] = False
                     edge['color'] = setEdgeColor(edge['match'], edge['path'])
-                    print("cleaning",uyPath[i], uyPath[i + 1], edge['color'])
-                    self.drawGraph(None,None)
+                    print("cleaning", uyPath[i], uyPath[i + 1], edge['color'])
+                    self.drawGraph(None, None)
 
     def getMatching(self):
         '''
@@ -155,7 +155,7 @@ class HungarianAlgorithm:
         if len(self.X) != len(self.Y):
             print("|X| != |Y| ==> impossible to have a perfect matching")
 
-        self.drawGraph(None,None)
+        self.drawGraph(None, None)
         self.initialMatching()  # initial matching.
         print('The initial matching is:', self.getMatching())
 
@@ -175,7 +175,7 @@ class HungarianAlgorithm:
 
         print('The final matching is:', self.getMatching())
 
-    def drawGraph(self,x,y):
+    def drawGraph(self, x, y):
         self.next = 1
         colors = [self.g[u][v]['color'] for u, v in self.g.edges()]
 
@@ -189,7 +189,7 @@ class HungarianAlgorithm:
             else:
                 nodeColor.append('red')
 
-        nx.draw(self.g, pos=pos, with_labels=True, edge_color=colors, node_color = nodeColor, width=5)
+        nx.draw(self.g, pos=pos, with_labels=True, edge_color=colors, node_color=nodeColor, width=5)
 
         axnext = plt.axes([0.81, 0.05, 0.1, 0.075])
         bnext = Button(axnext, 'Next')
@@ -308,11 +308,12 @@ def read_presets(filename='presets.txt'):
     with open(filename, 'r') as f:
         res = [[]]
         for line in f:
-            if not line.strip(): # Empty line
+            if not line.strip():  # Empty line
                 res.append([])
             else:
                 res[-1].append(line.split())
         return res
+
 
 if __name__ == '__main__':
     if os.path.isfile('presets.txt'):
