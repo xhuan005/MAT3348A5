@@ -63,10 +63,11 @@ class HungarianAlgorithm:
                     self.V[y]['saturated'] = True
                     self.V[y]['matchingVertex'] = x
                     self.V[x]['matchingVertex'] = y
+                    self.drawGraph(x,y)
                     self.g[x][y]['match'] = True
                     self.g[x][y]['color'] = setEdgeColor(self.g[x][y]['match'],
                                                          self.g[x][y]['path'])  # set color for visual
-                    self.drawGraph()
+                    self.drawGraph(None,None)
                     break
 
     def getFirstUnsaturatedX(self):
@@ -106,12 +107,13 @@ class HungarianAlgorithm:
                 for i in range(0, len(uyPath), 2):
                     # Clear current matching
                     if i != 0:
+                        self.drawGraph(uyPath[i-1],uyPath[i])
                         prevEdge = self.g[uyPath[i]][self.V[uyPath[i]]['matchingVertex']]
                         prevEdge['match'] = False
                         prevEdge['path'] = True
                         prevEdge['color'] = setEdgeColor(False, True)
                         print(uyPath[i], uyPath[i + 1], prevEdge['color'])
-                        self.drawGraph()
+                        self.drawGraph(None,None)
 
                     vProps = self.V[uyPath[i]]
                     vProps['saturated'] = True
@@ -122,21 +124,23 @@ class HungarianAlgorithm:
                     nextVProps['matchingVertex'] = uyPath[i]
 
                     edge = self.g[uyPath[i]][uyPath[i + 1]]
+                    self.drawGraph(uyPath[i],uyPath[i + 1])
                     edge['match'] = True
                     edge['path'] = True
                     edge['color'] = setEdgeColor(True, True)
                     print(uyPath[i], uyPath[i + 1], edge['color'])
-                    self.drawGraph()
+                    self.drawGraph(None,None)
 
                     print('{{{}, {}}} is marked M-saturated'.format(uyPath[i], uyPath[i + 1]))
 
                 # Cleanup the path
                 for i in range(len(uyPath) - 1):
                     edge = self.g[uyPath[i]][uyPath[i + 1]]
+                    self.drawGraph(uyPath[i], uyPath[i + 1])
                     edge['path'] = False
                     edge['color'] = setEdgeColor(edge['match'], False)
                     print(uyPath[i], uyPath[i + 1], edge['color'])
-                    self.drawGraph()
+                    self.drawGraph(None,None)
 
     def getMatching(self):
         '''
@@ -149,7 +153,7 @@ class HungarianAlgorithm:
         if len(self.X) != len(self.Y):
             print("|X| != |Y| ==> impossible to have a perfect matching")
 
-        self.drawGraph()
+        self.drawGraph(None,None)
         self.initialMatching()  # initial matching.
         print('The initial matching is:', self.getMatching())
 
@@ -169,15 +173,21 @@ class HungarianAlgorithm:
 
         print('The final matching is:', self.getMatching())
 
-    def drawGraph(self):
+    def drawGraph(self,x,y):
         self.next = 1
         colors = [self.g[u][v]['color'] for u, v in self.g.edges()]
 
         # Specify positions of vertices in bipartitions X and Y in the drawing
         pos = dict(list({v: (i, 1) for i, v in enumerate(sorted(self.X))}.items()) +
                    list({v: (i, 2) for i, v in enumerate(sorted(self.Y))}.items()))
+        nodeColor = []
+        for v in self.g.nodes:
+            if v == x or v == y:
+                nodeColor.append('blue')
+            else:
+                nodeColor.append('red')
 
-        nx.draw(self.g, pos=pos, with_labels=True, edge_color=colors, width=5)
+        nx.draw(self.g, pos=pos, with_labels=True, edge_color=colors, node_color = nodeColor, width=5)
 
         axnext = plt.axes([0.81, 0.05, 0.1, 0.075])
         bnext = Button(axnext, 'Next')
